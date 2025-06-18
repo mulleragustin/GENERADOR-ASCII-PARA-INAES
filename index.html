@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Generador de Archivo ASCII de Deudores</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #333;
+        }
+        .container {
+            max-width: 90%;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .input-group label {
+            font-weight: 600;
+            color: #4b5563;
+        }
+        .input-group input,
+        .input-group select {
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+            color: #374151;
+            width: 100%;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn-primary {
+            background-color: #4f46e5;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary:hover {
+            background-color: #4338ca;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+            transform: translateY(-1px);
+        }
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+        }
+        .section-header {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+        }
+        .record-card {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            font-family: 'monospace';
+            background-color: #f9fafb;
+            color: #1f2937;
+        }
+        .message-box {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+        .message-box button {
+            margin-top: 15px;
+            padding: 8px 15px;
+            border: none;
+            background-color: #4f46e5;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .type-selector {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .type-selector button {
+            flex-grow: 1;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            border: 1px solid #d1d5db;
+        }
+        .type-selector button.active {
+            background-color: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
+        .type-selector button:not(.active):hover {
+            background-color: #e5e7eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+
+    <div class="message-box" id="messageBox">
+        <p id="messageText"></p>
+        <button onclick="document.getElementById('messageBox').style.display='none'">Cerrar</button>
+    </div>
+
+    <div class="container">
+        <h1 class="text-3xl font-extrabold text-center text-gray-800 mb-6">Generador de Archivo ASCII para INAES</h1>
+
+        <!-- Selector de Tipo de Operación -->
+        <div class="type-selector mb-8">
+            <button id="selectAlta" class="active">Alta de Deudores</button>
+            <button id="selectModificacion">Modificación de Deudores</button>
+        </div>
+
+        <!-- Botón para abrir el modal -->
+        <button type="button" class="btn btn-info mb-4" data-bs-toggle="modal" data-bs-target="#modalEspecificacion">
+        Ver Especificaciónes
+        </button>
+
+        <!-- Sección de Encabezado (HEADER) -->
+        <div class="mb-8 p-6 bg-blue-50 rounded-xl shadow-inner">
+            <h2 class="section-header text-blue-800">Datos de Encabezado (HEADER)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="input-group">
+                    <label for="hdrCuit" class="block text-sm">HDR-CUIT (11 Caract. Num.)</label>
+                    <input type="text" id="hdrCuit" maxlength="11" class="mt-1 block w-full rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+                <div class="input-group">
+                    <label for="hdrTipoReg" class="block text-sm">HDR-TIPO-REG (2 Caract. Constante "HH")</label>
+                    <input type="text" id="hdrTipoReg" value="HH" readonly class="mt-1 block w-full bg-gray-200 cursor-not-allowed rounded-md shadow-sm">
+                </div>
+                <div class="input-group">
+                    <label for="hdrMatricula" class="block text-sm">HDR-MATRICULA (9 Caract. Num.)</label>
+                    <input type="text" id="hdrMatricula" maxlength="9" class="mt-1 block w-full rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+                <div class="input-group">
+                    <label for="hdrProvincia" class="block text-sm">HDR-PROVINCIA (1 Caract.)</label>
+                    <select id="hdrProvincia" class="mt-1 block w-full rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></select>
+                </div>
+                <div class="input-group">
+                    <label for="hdrGrado" class="block text-sm">HDR-GRADO (2 Caract.)</label>
+                    <select id="hdrGrado" class="mt-1 block w-full rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></select>
+                </div>
+                <div class="input-group">
+                    <label for="hdrRetorno" class="block text-sm">HDR-RETORNO (2 Caract. - Blanco)</label>
+                    <input type="text" id="hdrRetorno" maxlength="2" value="  " class="mt-1 block w-full rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+                <div class="input-group">
+                    <label for="hdrArchivo" class="block text-sm">HDR-ARCHIVO (1 Caract. Constante)</label>
+                    <input type="text" id="hdrArchivo" value="A" readonly class="mt-1 block w-full bg-gray-200 cursor-not-allowed rounded-md shadow-sm">
+                </div>
+                <div class="input-group">
+                    <label for="hdrFechaGrabacion" class="block text-sm">HDR-FECHA-GRABACION (AAAAMMDD)</label>
+                    <input type="date" id="hdrFechaGrabacion" class="mt-1 block w-full rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+                <div class="input-group">
+                    <label for="hdrHoraGrabacion" class="block text-sm">HDR-HORA-GRABACION (HHMMSS)</label>
+                    <input type="time" id="hdrHoraGrabacion" step="1" class="mt-1 block w-full rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Registros de Deudores (ALTA) -->
+        <div id="altaSection" class="mb-8 p-6 bg-green-50 rounded-xl shadow-inner">
+            <h2 class="section-header text-green-800">Datos de Registros de Deudores (ALTA)</h2>
+            <div id="debtorRecordsContainer">
+                <!-- Los registros de deudores se añadirán aquí dinámicamente -->
+            </div>
+            <button id="addDebtorRecord" class="mt-4 btn btn-secondary flex items-center justify-center space-x-2" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+
+                <span>Añadir Registro de Deudor</span>
+            </button>
+        </div>
+
+        <!-- Sección de Registros de Modificaciones (MODIFICACION) -->
+        <div id="modificacionSection" class="mb-8 p-6 bg-yellow-50 rounded-xl shadow-inner hidden">
+            <h2 class="section-header text-yellow-800">Datos de Registros de Modificaciones</h2>
+            <div id="modificationRecordsContainer">
+                <!-- Los registros de modificación se añadirán aquí dinámicamente -->
+            </div>
+            <button id="addModificationRecord" class="mt-4 btn btn-secondary flex items-center justify-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                </svg>
+                <span>Añadir Registro de Modificación</span>
+            </button>
+        </div>
+
+
+        <!-- Botones de Acción -->
+        <div class="flex justify-center space-x-4 mb-8">
+            <button id="generateAscii" class="btn btn-primary">Generar ASCII</button>
+            <button id="copyToClipboard" class="btn btn-secondary">Copiar al Portapapeles</button>
+            <button id="downloadAscii" class="btn btn-primary">Descargar ASCII</button>
+        </div>
+
+        <!-- Vista previa del ASCII generado -->
+        <div class="p-6 bg-gray-50 rounded-xl shadow-inner">
+            <h2 class="section-header text-gray-800">Previsualización</h2>
+            <textarea placeholder="Previsualización de Archivo ASCII" id="asciiOutput" rows="10" class="font-mono text-sm"></textarea>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="modalEspecificacion" tabindex="-1" aria-labelledby="modalEspecificacionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="modalEspecificacionLabel">Especificación de Archivo - Información de Alta</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="table-responsive">
+            <table class="table table-bordered table-sm">
+                <thead class="table-dark">
+                <tr>
+                    <th>CAMPO</th>
+                    <th>FORMATO</th>
+                    <th>POSICIÓN</th>
+                    <th>LONGITUD</th>
+                    <th>DESCRIPCIÓN</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- HEADER Section -->
+                <tr class="table-info">
+                    <td colspan="5"><strong>INFORMACIÓN DE ALTA</strong></td>
+                </tr>
+                <tr class="table-secondary">
+                    <td colspan="5"><strong>HEADER (300 caracteres)</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>HDR-KEY</strong></td>
+                    <td>C</td>
+                    <td>1</td>
+                    <td>30</td>
+                    <td>Clave del encabezado</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;HDR-CUIT</td>
+                    <td>C</td>
+                    <td>1</td>
+                    <td>11</td>
+                    <td>CUIT de Identificación de la ENTIDAD</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;HDR-TIPO-REG</td>
+                    <td>C</td>
+                    <td>12</td>
+                    <td>2</td>
+                    <td>Contiene la constante "HH"</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;HDR-MATRICULA</td>
+                    <td>N</td>
+                    <td>14</td>
+                    <td>9</td>
+                    <td>MATRICULA DE LA ENTIDAD</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;HDR-PROVINCIA</td>
+                    <td>C</td>
+                    <td>23</td>
+                    <td>1</td>
+                    <td>Ver TABLA PROVINCIAS</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;HDR-GRADO</td>
+                    <td>C</td>
+                    <td>24</td>
+                    <td>2</td>
+                    <td>Ver TABLA GRADO</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;HDR-RETORNO</td>
+                    <td>C</td>
+                    <td>26</td>
+                    <td>2</td>
+                    <td>Código de retorno en caso de error</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;SIN USO (BLANCOS)</td>
+                    <td>C</td>
+                    <td>28</td>
+                    <td>8</td>
+                    <td>Espacios en blanco</td>
+                </tr>
+                <tr>
+                    <td><strong>HDR-DATOS</strong></td>
+                    <td></td>
+                    <td>36</td>
+                    <td>280</td>
+                    <td>Datos del encabezado</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;HDR-ARCHIVO</td>
+                    <td>C</td>
+                    <td>36</td>
+                    <td>1</td>
+                    <td>Contiene la constante "A" de ALTAS</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;HDR-FECHA-GRABACION</td>
+                    <td>N</td>
+                    <td>37</td>
+                    <td>8</td>
+                    <td>FORMATO AAAAMMDD</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;HDR-HORA-GRABACION</td>
+                    <td>N</td>
+                    <td>45</td>
+                    <td>6</td>
+                    <td>FORMATO HHMMSS</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;SIN USO (BLANCOS)</td>
+                    <td>C</td>
+                    <td>51</td>
+                    <td>250</td>
+                    <td>Espacios en blanco</td>
+                </tr>
+                
+                <!-- REGISTRO Section -->
+                <tr class="table-secondary">
+                    <td colspan="5"><strong>REGISTRO (300 caracteres)</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>REG-KEY</strong></td>
+                    <td></td>
+                    <td>1</td>
+                    <td>50</td>
+                    <td>Clave del registro</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;REG-CUIT-REPORTADO</td>
+                    <td>N</td>
+                    <td>1</td>
+                    <td>11</td>
+                    <td>CUIT del Deudor</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;REG-TIPO-DOCUMENTO</td>
+                    <td>C</td>
+                    <td>12</td>
+                    <td>3</td>
+                    <td>Tipo de identificación (DNI/LEN/LCI/PSP)</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;REG-NRO-DOCUMENTO</td>
+                    <td>N</td>
+                    <td>15</td>
+                    <td>20</td>
+                    <td>Número de identificación</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;SIN USO (BLANCOS)</td>
+                    <td>C</td>
+                    <td>35</td>
+                    <td>16</td>
+                    <td>Espacios en blanco</td>
+                </tr>
+                <tr>
+                    <td><strong>REG-DATOS</strong></td>
+                    <td>C</td>
+                    <td>51</td>
+                    <td>250</td>
+                    <td>Datos del registro</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;REG-APELLIDO-Y-NOMBRE</td>
+                    <td>C</td>
+                    <td>51</td>
+                    <td>70</td>
+                    <td>Apellido y Nombre (formato especificado)</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;REG-FECHA-NACIMIENTO</td>
+                    <td>N</td>
+                    <td>121</td>
+                    <td>8</td>
+                    <td>FORMATO AAAAMMDD</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;SIN USO (BLANCOS)</td>
+                    <td>C</td>
+                    <td>129</td>
+                    <td>1</td>
+                    <td>Espacios en blanco</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;REG-TIPO-SOCIEDAD-PERSONA</td>
+                    <td>C</td>
+                    <td>130</td>
+                    <td>1</td>
+                    <td>Tipo de persona y sexo (Ver Tabla)</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;REG-EST-CIVIL</td>
+                    <td>C</td>
+                    <td>131</td>
+                    <td>1</td>
+                    <td>Estado civil (Ver Tabla)</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;REG-DIRECCION</td>
+                    <td>C</td>
+                    <td>132</td>
+                    <td>40</td>
+                    <td>Dirección (calle, número y piso juntos)</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;REG-LOCALIDAD</td>
+                    <td>C</td>
+                    <td>172</td>
+                    <td>20</td>
+                    <td>Nombre de la localidad</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;REG-PROVINCIA</td>
+                    <td>C</td>
+                    <td>192</td>
+                    <td>1</td>
+                    <td>Código provincia (Ver Tabla)</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;REG-COD-POSTAL</td>
+                    <td>C</td>
+                    <td>193</td>
+                    <td>8</td>
+                    <td>Código postal (o ceros si no se sabe)</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;REG-TELEFONO-FIJO</td>
+                    <td>C</td>
+                    <td>201</td>
+                    <td>14</td>
+                    <td>Número de teléfono fijo (completar con espacios)</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;REG-TELEFONO-CELULAR</td>
+                    <td>C</td>
+                    <td>215</td>
+                    <td>14</td>
+                    <td>Número de teléfono celular (completar con espacios)</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;REG-NACIONALIDAD</td>
+                    <td>C</td>
+                    <td>229</td>
+                    <td>1</td>
+                    <td>Nacionalidad (Ver Tabla)</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;REG-RETORNO</td>
+                    <td>C</td>
+                    <td>230</td>
+                    <td>2</td>
+                    <td>Código de retorno en caso de rechazo</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;SIN USO (BLANCOS)</td>
+                    <td>C</td>
+                    <td>232</td>
+                    <td>69</td>
+                    <td>Espacios en blanco</td>
+                </tr>
+                
+                <!-- TRAILER Section -->
+                <tr class="table-secondary">
+                    <td colspan="5"><strong>TRAILER (300 caracteres)</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>TRL-KEY</strong></td>
+                    <td></td>
+                    <td>1</td>
+                    <td>30</td>
+                    <td>Clave del tráiler</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;TRL-CUIT</td>
+                    <td>C</td>
+                    <td>1</td>
+                    <td>11</td>
+                    <td>CUIT de Identificación de la ENTIDAD</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;TRL-TIPO-REGISTRO</td>
+                    <td>C</td>
+                    <td>12</td>
+                    <td>2</td>
+                    <td>Constante "TT"</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;SIN USO (BLANCOS)</td>
+                    <td>C</td>
+                    <td>14</td>
+                    <td>20</td>
+                    <td>Espacios en blanco</td>
+                </tr>
+                <tr>
+                    <td><strong>TRL-DATOS</strong></td>
+                    <td></td>
+                    <td>34</td>
+                    <td>266</td>
+                    <td>Datos del tráiler</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;TRL-CANT-REGISTROS</td>
+                    <td>N</td>
+                    <td>34</td>
+                    <td>10</td>
+                    <td>Cantidad de registros de altas (excluye header y tráiler)</td>
+                </tr>
+                <tr>
+                    <td>&nbsp;&nbsp;SIN USO (BLANCOS)</td>
+                    <td>C</td>
+                    <td>44</td>
+                    <td>257</td>
+                    <td>Espacios en blanco</td>
+                </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+        </div>
+    </div>
+    </div>
+
+
+    <script>
+        // Función para mostrar mensajes modales
+        function showMessage(message) {
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+            messageText.textContent = message;
+            messageBox.style.display = 'block';
+        }
+
+        // Tablas de Referencia del PDF
+        const TABLAS_REFERENCIA = {
+            provincias: {
+                "A": "SALTA", "B": "BUENOS AIRES", "C": "CAPITAL FEDERAL", "D": "SAN LUIS",
+                "E": "ENTRE RIOS", "F": "LA RIOJA", "G": "SANTIAGO DEL ESTERO", "H": "CHACO",
+                "I": "SIN PROVINCIA", "J": "SAN JUAN", "K": "CATAMARCA", "L": "LA PAMPA",
+                "M": "MENDOZA", "N": "MISIONES", "P": "FORMOSA", "Q": "NEUQUEN",
+                "R": "RIO NEGRO", "S": "SANTA FE", "T": "TUCUMAN", "U": "CHUBUT",
+                "V": "TIERRA DEL FUEGO", "W": "CORRIENTES", "X": "CORDOBA", "Y": "JUJUY",
+                "Z": "SANTA CRUZ"
+            },
+            tiposSociedadPersona: {
+                "S": "Sociedad", "M": "Masculino", "F": "Femenino", " ": "No Declara"
+            },
+            grado: {
+                "CO": "Cooperativa", "FC": "Federación de cooperativas", "CC": "Confederación de cooperativas",
+                "MM": "Mutual", "FM": "Federación de mutuales", "CM": "Confederación de mutuales"
+            },
+            nacionalidad: {
+                "A": "Argentina", "E": "Extranjera", " ": "Desconocida"
+            },
+            tiposDocumento: {
+                "DNI": "Documento Nacional de Identidad", "LEN": "Libreta de Enrolamiento",
+                "LCI": "Libreta Cívica", "PSP": "Pasaporte"
+            },
+            estadoCivil: {
+                "1131": "No declara", "S": "Soltero/a", "C": "Casado/a", "D": "Divorciado/a",
+                "V": "Viudo/a", "J": "Concubino/a"
+            },
+            estadoDeudaEntidad: {
+                "1": "Normal. Hasta 30 días de atraso", "2": "Atraso entre 31 y 60 días",
+                "3": "Atraso entre 61 y 90 días", "4": "Atraso entre 91 y 120 días",
+                "5": "Atraso entre 121 y 180 días", "6": "Atraso entre 181 y 360 días",
+                "G": "Gestión de Cobranza extrajudicial", "J": "En Juicio",
+                "L": "En Legales o Amparo. NO REPORTAR", "R": "En Legales o Amparo. REPORTAR",
+                "I": "Incobrable", "F": "Finalizada/Sin Deuda"
+            },
+            estadoDeudaInaes: {
+                "1": "Normal: A Vencer o con atraso hasta 30 días",
+                "2": "Riesgo Bajo: De 31 a 90 días de atraso",
+                "3": "Riesgo Medio: De 91 a 180 días de atraso",
+                "4": "Riesgo Alto: De 181 a 365 días de atraso",
+                "5": "Irrecuperables: Más de 365 días de atraso"
+            },
+            tipoCartera: {
+                "NI": "No Informado", "PR": "Prendario", "HI": "Hipotecario",
+                "VI": "Vivienda", "CO": "Consumo"
+            }
+        };
+
+        // Función para rellenar selectores con datos de las tablas de referencia
+        function populateSelect(selectElement, data) {
+            selectElement.innerHTML = '<option value="">Seleccione...</option>'; // Opción por defecto
+            for (const key in data) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = `${key} - ${data[key]}`;
+                selectElement.appendChild(option);
+            }
+        }
+
+        // Variable global para controlar el tipo de operación
+        let currentOperationType = 'alta'; // 'alta' or 'modificacion'
+
+        // Event Listeners para el selector de tipo de operación
+        document.getElementById('selectAlta').addEventListener('click', () => {
+            currentOperationType = 'alta';
+            document.getElementById('hdrArchivo').value = 'A';
+            document.getElementById('altaSection').classList.remove('hidden');
+            document.getElementById('modificacionSection').classList.add('hidden');
+            document.getElementById('selectAlta').classList.add('active');
+            document.getElementById('selectModificacion').classList.remove('active');
+            document.getElementById('asciiOutput').value = ''; // Clear output on type change
+        });
+
+        document.getElementById('selectModificacion').addEventListener('click', () => {
+            currentOperationType = 'modificacion';
+            document.getElementById('hdrArchivo').value = 'M';
+            document.getElementById('altaSection').classList.add('hidden');
+            document.getElementById('modificacionSection').classList.remove('hidden');
+            document.getElementById('selectAlta').classList.remove('active');
+            document.getElementById('selectModificacion').classList.add('active');
+            document.getElementById('asciiOutput').value = ''; // Clear output on type change
+        });
+
+        // Rellenar selectores al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            populateSelect(document.getElementById('hdrProvincia'), TABLAS_REFERENCIA.provincias);
+            populateSelect(document.getElementById('hdrGrado'), TABLAS_REFERENCIA.grado);
+
+            // Set current date and time
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+
+            document.getElementById('hdrFechaGrabacion').value = `${year}-${month}-${day}`;
+            document.getElementById('hdrHoraGrabacion').value = `${hours}:${minutes}:${seconds}`;
+
+            // Add one initial debtor record for Alta
+            addDebtorRecord();
+            // Add one initial modification record for Modificacion (hidden initially)
+            addModificationRecord();
+        });
+
+        let debtorRecordCounter = 0;
+        let modificationRecordCounter = 0;
+
+        // Función para añadir un nuevo bloque de registro de deudor (ALTA)
+        document.getElementById('addDebtorRecord').addEventListener('click', addDebtorRecord);
+
+        function addDebtorRecord() {
+            debtorRecordCounter++;
+            const container = document.getElementById('debtorRecordsContainer');
+            const recordId = `alta-record-${debtorRecordCounter}`;
+
+            const recordDiv = document.createElement('div');
+            recordDiv.id = recordId;
+            recordDiv.classList.add('record-card');
+            recordDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-md font-bold text-gray-700">Registro de Deudor #${debtorRecordCounter}</h3>
+                    <button class="btn btn-danger btn-sm remove-record" data-record-id="${recordId}">
+                        Eliminar
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="input-group">
+                        <label for="regCuitReportado-${recordId}" class="block text-sm">REG-CUIT-REPORTADO (11 Caract. Num.)</label>
+                        <input type="text" id="regCuitReportado-${recordId}" maxlength="11" class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                    <div class="input-group">
+                        <label for="regTipoDocumento-${recordId}" class="block text-sm">REG-TIPO-DOCUMENTO (3 Caract.)</label>
+                        <select id="regTipoDocumento-${recordId}" class="mt-1 block w-full rounded-md shadow-sm"></select>
+                    </div>
+                    <div class="input-group">
+                        <label for="regNroDocumento-${recordId}" class="block text-sm">REG-NRO-DOCUMENTO (20 Caract. Num.)</label>
+                        <input type="text" id="regNroDocumento-${recordId}" maxlength="20" class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                    <div class="input-group col-span-1 md:col-span-2 lg:col-span-3">
+                        <label for="regApellidoNombre-${recordId}" class="block text-sm">REG-APELLIDO-Y-NOMBRE (70 Caract.)</label>
+                        <input type="text" id="regApellidoNombre-${recordId}" maxlength="70" class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                    <div class="input-group">
+                        <label for="regFechaNacimiento-${recordId}" class="block text-sm">REG-FECHA-NACIMIENTO (AAAAMMDD)</label>
+                        <input type="date" id="regFechaNacimiento-${recordId}" class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                    <div class="input-group">
+                        <label for="regTipoSociedadPersona-${recordId}" class="block text-sm">REG-TIPO-SOCIEDAD-PERSONA (1 Caract.)</label>
+                        <select id="regTipoSociedadPersona-${recordId}" class="mt-1 block w-full rounded-md shadow-sm"></select>
+                    </div>
+                    <div class="input-group">
+                        <label for="regEstCivil-${recordId}" class="block text-sm">REG-EST-CIVIL (1 Caract.)</label>
+                        <select id="regEstCivil-${recordId}" class="mt-1 block w-full rounded-md shadow-sm"></select>
+                    </div>
+                    <div class="input-group col-span-1 md:col-span-2">
+                        <label for="regDireccion-${recordId}" class="block text-sm">REG-DIRECCION (40 Caract.)</label>
+                        <input type="text" id="regDireccion-${recordId}" maxlength="40" class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                    <div class="input-group">
+                        <label for="regLocalidad-${recordId}" class="block text-sm">REG-LOCALIDAD (20 Caract.)</label>
+                        <input type="text" id="regLocalidad-${recordId}" maxlength="20" class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                    <div class="input-group">
+                        <label for="regProvincia-${recordId}" class="block text-sm">REG-PROVINCIA (1 Caract.)</label>
+                        <select id="regProvincia-${recordId}" class="mt-1 block w-full rounded-md shadow-sm"></select>
+                    </div>
+                    <div class="input-group">
+                        <label for="regCodPostal-${recordId}" class="block text-sm">REG-COD-POSTAL (8 Caract.)</label>
+                        <input type="text" id="regCodPostal-${recordId}" maxlength="8" class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                    <div class="input-group">
+                        <label for="regTelefonoFijo-${recordId}" class="block text-sm">REG-TELEFONO-FIJO (14 Caract.)</label>
+                        <input type="text" id="regTelefonoFijo-${recordId}" maxlength="14" class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                    <div class="input-group">
+                        <label for="regTelefonoCelular-${recordId}" class="block text-sm">REG-TELEFONO-CELULAR (14 Caract.)</label>
+                        <input type="text" id="regTelefonoCelular-${recordId}" maxlength="14" class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                    <div class="input-group">
+                        <label for="regNacionalidad-${recordId}" class="block text-sm">REG-NACIONALIDAD (1 Caract.)</label>
+                        <select id="regNacionalidad-${recordId}" class="mt-1 block w-full rounded-md shadow-sm"></select>
+                    </div>
+                    <div class="input-group">
+                        <label for="regRetorno-${recordId}" class="block text-sm">REG-RETORNO (2 Caract. - Blanco)</label>
+                        <input type="text" id="regRetorno-${recordId}" maxlength="2" value="  " class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                </div>
+            `;
+            container.appendChild(recordDiv);
+
+            // Rellenar selectores para el nuevo registro
+            populateSelect(document.getElementById(`regTipoDocumento-${recordId}`), TABLAS_REFERENCIA.tiposDocumento);
+            populateSelect(document.getElementById(`regTipoSociedadPersona-${recordId}`), TABLAS_REFERENCIA.tiposSociedadPersona);
+            populateSelect(document.getElementById(`regEstCivil-${recordId}`), TABLAS_REFERENCIA.estadoCivil);
+            populateSelect(document.getElementById(`regProvincia-${recordId}`), TABLAS_REFERENCIA.provincias);
+            populateSelect(document.getElementById(`regNacionalidad-${recordId}`), TABLAS_REFERENCIA.nacionalidad);
+
+            // Add event listener for remove button
+            recordDiv.querySelector('.remove-record').addEventListener('click', function() {
+                recordDiv.remove();
+            });
+        }
+
+        // Función para añadir un nuevo bloque de registro de modificación
+        document.getElementById('addModificationRecord').addEventListener('click', addModificationRecord);
+
+        function addModificationRecord() {
+            modificationRecordCounter++;
+            const container = document.getElementById('modificationRecordsContainer');
+            const recordId = `mod-record-${modificationRecordCounter}`;
+
+            const recordDiv = document.createElement('div');
+            recordDiv.id = recordId;
+            recordDiv.classList.add('record-card');
+            recordDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-md font-bold text-gray-700">Registro de Modificación #${modificationRecordCounter}</h3>
+                    <button class="btn btn-danger btn-sm remove-record" data-record-id="${recordId}">
+                        Eliminar
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="input-group">
+                        <label for="modCuitReportado-${recordId}" class="block text-sm">REG-CUIT-REPORTADO (11 Caract. Num.)</label>
+                        <input type="text" id="modCuitReportado-${recordId}" maxlength="11" class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                    <div class="input-group">
+                        <label for="modTipoDocumento-${recordId}" class="block text-sm">REG-TIPO-DOCUMENTO (3 Caract.)</label>
+                        <select id="modTipoDocumento-${recordId}" class="mt-1 block w-full rounded-md shadow-sm"></select>
+                    </div>
+                    <div class="input-group">
+                        <label for="modNroDocumento-${recordId}" class="block text-sm">REG-NRO-DOCUMENTO (20 Caract. Num.)</label>
+                        <input type="text" id="modNroDocumento-${recordId}" maxlength="20" class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                    <div class="input-group">
+                        <label for="modDiasAtraso-${recordId}" class="block text-sm">REG-DIAS-ATRASO (3 Caract. Num.)</label>
+                        <input type="text" id="modDiasAtraso-${recordId}" maxlength="3" class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                    <div class="input-group">
+                        <label for="modTipo-${recordId}" class="block text-sm">REG-TIPO (2 Caract.)</label>
+                        <select id="modTipo-${recordId}" class="mt-1 block w-full rounded-md shadow-sm"></select>
+                    </div>
+                    <div class="input-group">
+                        <label for="modEstado-${recordId}" class="block text-sm">REG-ESTADO (1 Caract.)</label>
+                        <select id="modEstado-${recordId}" class="mt-1 block w-full rounded-md shadow-sm"></select>
+                    </div>
+                    <div class="input-group">
+                        <label for="modEstadoInaes-${recordId}" class="block text-sm">REG-ESTADO-INAES (1 Caract. Num.)</label>
+                        <select id="modEstadoInaes-${recordId}" class="mt-1 block w-full rounded-md shadow-sm"></select>
+                    </div>
+                    <div class="input-group">
+                        <label for="modCompromisoCorriente-${recordId}" class="block text-sm">REG-COMPROMISO-CORRIENTE (9 Caract. Num.)</label>
+                        <input type="text" id="modCompromisoCorriente-${recordId}" maxlength="9" class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                    <div class="input-group">
+                        <label for="modSaldoTotal-${recordId}" class="block text-sm">REG-SALDO-TOTAL (9 Caract. Num.)</label>
+                        <input type="text" id="modSaldoTotal-${recordId}" maxlength="9" class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                    <div class="input-group">
+                        <label for="modSaldoVencido-${recordId}" class="block text-sm">REG-SALDO-VENCIDO (9 Caract. Num.)</label>
+                        <input type="text" id="modSaldoVencido-${recordId}" maxlength="9" class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                    <div class="input-group">
+                        <label for="modRetorno-${recordId}" class="block text-sm">REG-RETORNO (2 Caract. - Blanco)</label>
+                        <input type="text" id="modRetorno-${recordId}" maxlength="2" value="  " class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                    <div class="input-group">
+                        <label for="modFechaInformacion-${recordId}" class="block text-sm">REG-FECHA-INFORMACION (AAAAMM)</label>
+                        <input type="month" id="modFechaInformacion-${recordId}" class="mt-1 block w-full rounded-md shadow-sm">
+                    </div>
+                </div>
+            `;
+            container.appendChild(recordDiv);
+
+            // Rellenar selectores para el nuevo registro de modificación
+            populateSelect(document.getElementById(`modTipoDocumento-${recordId}`), TABLAS_REFERENCIA.tiposDocumento);
+            populateSelect(document.getElementById(`modTipo-${recordId}`), TABLAS_REFERENCIA.tipoCartera);
+            populateSelect(document.getElementById(`modEstado-${recordId}`), TABLAS_REFERENCIA.estadoDeudaEntidad);
+            populateSelect(document.getElementById(`modEstadoInaes-${recordId}`), TABLAS_REFERENCIA.estadoDeudaInaes);
+
+
+            // Add event listener for remove button
+            recordDiv.querySelector('.remove-record').addEventListener('click', function() {
+                recordDiv.remove();
+            });
+        }
+
+
+        // Función de padding
+        function pad(value, length, padChar = ' ', align = 'left') {
+            value = String(value);
+            if (value.length > length) {
+                return value.substring(0, length);
+            }
+            if (align === 'right') {
+                return value.padStart(length, padChar);
+            }
+            return value.padEnd(length, padChar);
+        }
+
+        // Función principal para generar el archivo ASCII
+        document.getElementById('generateAscii').addEventListener('click', generateAsciiFile);
+
+        function generateAsciiFile() {
+            let asciiContent = "";
+            const CR_LF = "\r\n"; // Retorno de carro y salto de línea
+
+            // 1. Generar HEADER
+            try {
+                const hdrCuit = pad(document.getElementById('hdrCuit').value, 11, '0', 'right');
+                const hdrTipoReg = pad(document.getElementById('hdrTipoReg').value, 2);
+                const hdrMatricula = pad(document.getElementById('hdrMatricula').value, 9, '0', 'right');
+                const hdrProvincia = pad(document.getElementById('hdrProvincia').value, 1);
+                const hdrGrado = pad(document.getElementById('hdrGrado').value, 2);
+                const hdrRetorno = pad(document.getElementById('hdrRetorno').value, 2);
+                const hdrSinUso1 = pad('', 8); // SIN USO (BLANCOS)
+                const hdrArchivo = pad(document.getElementById('hdrArchivo').value, 1); // 'A' or 'M'
+                const hdrFechaGrabacion = pad(document.getElementById('hdrFechaGrabacion').value.replace(/-/g, ''), 8);
+                const hdrHoraGrabacion = pad(document.getElementById('hdrHoraGrabacion').value.replace(/:/g, ''), 6);
+                const hdrSinUso2 = pad('', 250); // SIN USO (BLANCOS)
+
+                const hdrKey = hdrCuit + hdrTipoReg + hdrMatricula + hdrProvincia + hdrGrado + hdrRetorno + hdrSinUso1;
+                const hdrDatos = hdrArchivo + hdrFechaGrabacion + hdrHoraGrabacion + hdrSinUso2;
+
+                const headerRecord = pad(hdrKey, 30) + pad(hdrDatos, 280); // Ensure total 300 chars
+                asciiContent += headerRecord + CR_LF;
+
+            } catch (error) {
+                showMessage("Error al generar el HEADER: " + error.message);
+                return;
+            }
+
+            let recordCount = 0;
+            let sumatoriaSaldoTotal = 0; // Solo para modificaciones, si aplica
+
+            if (currentOperationType === 'alta') {
+                // 2. Generar REGISTRO(s) de ALTA
+                const debtorRecords = document.querySelectorAll('#debtorRecordsContainer .record-card');
+                debtorRecords.forEach(recordDiv => {
+                    try {
+                        const recordId = recordDiv.id;
+                        const regCuitReportado = pad(document.getElementById(`regCuitReportado-${recordId}`).value, 11, '0', 'right');
+                        const regTipoDocumento = pad(document.getElementById(`regTipoDocumento-${recordId}`).value, 3);
+                        const regNroDocumento = pad(document.getElementById(`regNroDocumento-${recordId}`).value, 20, '0', 'right');
+                        const regSinUso1 = pad('', 16); // SIN USO (BLANCOS)
+                        const regApellidoNombre = pad(document.getElementById(`regApellidoNombre-${recordId}`).value, 70);
+                        const regFechaNacimiento = pad(document.getElementById(`regFechaNacimiento-${recordId}`).value.replace(/-/g, ''), 8);
+                        const regSinUso2 = pad('', 1); // SIN USO (BLANCOS)
+                        const regTipoSociedadPersona = pad(document.getElementById(`regTipoSociedadPersona-${recordId}`).value, 1);
+                        const regEstCivil = pad(document.getElementById(`regEstCivil-${recordId}`).value, 1);
+                        const regDireccion = pad(document.getElementById(`regDireccion-${recordId}`).value, 40);
+                        const regLocalidad = pad(document.getElementById(`regLocalidad-${recordId}`).value, 20);
+                        const regProvincia = pad(document.getElementById(`regProvincia-${recordId}`).value, 1);
+                        const regCodPostal = pad(document.getElementById(`regCodPostal-${recordId}`).value, 8);
+                        const regTelefonoFijo = pad(document.getElementById(`regTelefonoFijo-${recordId}`).value, 14);
+                        const regTelefonoCelular = pad(document.getElementById(`regTelefonoCelular-${recordId}`).value, 14);
+                        const regNacionalidad = pad(document.getElementById(`regNacionalidad-${recordId}`).value, 1);
+                        const regRetorno = pad(document.getElementById(`regRetorno-${recordId}`).value, 2);
+                        const regSinUso3 = pad('', 69); // SIN USO (BLANCOS)
+
+                        const regKey = regCuitReportado + regTipoDocumento + regNroDocumento + regSinUso1;
+                        const regDatos = regApellidoNombre + regFechaNacimiento + regSinUso2 + regTipoSociedadPersona +
+                                         regEstCivil + regDireccion + regLocalidad + regProvincia + regCodPostal +
+                                         regTelefonoFijo + regTelefonoCelular + regNacionalidad + regRetorno + regSinUso3;
+
+                        const recordLine = pad(regKey, 50) + pad(regDatos, 250); // Ensure total 300 chars
+                        asciiContent += recordLine + CR_LF;
+                        recordCount++;
+
+                    } catch (error) {
+                        showMessage(`Error al generar el REGISTRO de ALTA #${recordCount + 1}: ` + error.message);
+                        return;
+                    }
+                });
+            } else { // currentOperationType === 'modificacion'
+                // 2. Generar REGISTRO(s) de MODIFICACION
+                const modificationRecords = document.querySelectorAll('#modificationRecordsContainer .record-card');
+                modificationRecords.forEach(recordDiv => {
+                    try {
+                        const recordId = recordDiv.id;
+                        const modCuitReportado = pad(document.getElementById(`modCuitReportado-${recordId}`).value, 11, '0', 'right');
+                        const modTipoDocumento = pad(document.getElementById(`modTipoDocumento-${recordId}`).value, 3);
+                        const modNroDocumento = pad(document.getElementById(`modNroDocumento-${recordId}`).value, 20, '0', 'right');
+                        const modSinUso1 = pad('', 16); // SIN USO (BLANCOS)
+                        const modDiasAtraso = pad(document.getElementById(`modDiasAtraso-${recordId}`).value, 3, '0', 'right');
+                        const modTipo = pad(document.getElementById(`modTipo-${recordId}`).value, 2);
+                        const modEstado = pad(document.getElementById(`modEstado-${recordId}`).value, 1);
+                        const modEstadoInaes = pad(document.getElementById(`modEstadoInaes-${recordId}`).value, 1);
+                        const modCompromisoCorriente = pad(document.getElementById(`modCompromisoCorriente-${recordId}`).value, 9, '0', 'right');
+                        const modSaldoTotal = pad(document.getElementById(`modSaldoTotal-${recordId}`).value, 9, '0', 'right');
+                        const modSaldoVencido = pad(document.getElementById(`modSaldoVencido-${recordId}`).value, 9, '0', 'right');
+                        const modRetorno = pad(document.getElementById(`modRetorno-${recordId}`).value, 2);
+                        const modFechaInformacion = pad(document.getElementById(`modFechaInformacion-${recordId}`).value.replace(/-/g, ''), 6);
+                        const modSinUso2 = pad('', 208); // SIN USO (BLANCOS)
+
+                        const regKey = modCuitReportado + modTipoDocumento + modNroDocumento + modSinUso1;
+                        const regDatosDeuda = modDiasAtraso + modTipo + modEstado + modEstadoInaes +
+                                              modCompromisoCorriente + modSaldoTotal + modSaldoVencido +
+                                              modRetorno + modFechaInformacion + modSinUso2;
+
+                        const recordLine = pad(regKey, 50) + pad(regDatosDeuda, 250); // Ensure total 300 chars
+                        asciiContent += recordLine + CR_LF;
+                        recordCount++;
+
+                        // Sumatoria del saldo total para el trailer de modificación
+                        sumatoriaSaldoTotal += parseInt(document.getElementById(`modSaldoTotal-${recordId}`).value || '0', 10);
+
+                    } catch (error) {
+                        showMessage(`Error al generar el REGISTRO de MODIFICACIÓN #${recordCount + 1}: ` + error.message);
+                        return;
+                    }
+                });
+            }
+
+
+            // 3. Generar TRAILER
+            try {
+                const trlCuit = pad(document.getElementById('hdrCuit').value, 11, '0', 'right'); // Usa el CUIT del header
+                const trlTipoRegistro = pad("TT", 2);
+                const trlSinUso1 = pad('', 17); // SIN USO (BLANCOS) (Length 20 for Alta, 17 for Modificacion)
+
+                let trlCantRegistros = pad(recordCount, 10, '0', 'right'); // Cantidad de registros generados
+                let trlSumatoriaSaldoTotalPadded = '';
+                let trlSinUso2 = '';
+
+                if (currentOperationType === 'alta') {
+                    trlSinUso2 = pad('', 257); // SIN USO (BLANCOS) para Alta
+                    // TRL-SUMATORIA-SALDO-TOTAL no aplica para alta, se especifica SIN USO (BLANCOS) de 18
+                    trlSumatoriaSaldoTotalPadded = pad('', 18);
+                    const trlDatos = trlCantRegistros + trlSumatoriaSaldoTotalPadded + trlSinUso2;
+                    const trailerRecord = pad(trlCuit + trlTipoRegistro + trlSinUso1, 30) + pad(trlDatos, 270);
+                    asciiContent += trailerRecord + CR_LF;
+                } else { // currentOperationType === 'modificacion'
+                    trlSumatoriaSaldoTotalPadded = pad(sumatoriaSaldoTotal, 18, '0', 'right'); // Sumatoria del saldo total para Modificación
+                    trlSinUso2 = pad('', 242); // SIN USO (BLANCOS) para Modificación
+                    const trlDatos = trlCantRegistros + trlSumatoriaSaldoTotalPadded + trlSinUso2;
+                    const trailerRecord = pad(trlCuit + trlTipoRegistro + trlSinUso1, 30) + pad(trlDatos, 270);
+                    asciiContent += trailerRecord + CR_LF;
+                }
+
+            } catch (error) {
+                showMessage("Error al generar el TRAILER: " + error.message);
+                return;
+            }
+
+            document.getElementById('asciiOutput').value = asciiContent;
+            showMessage("¡Archivo ASCII generado correctamente!");
+        }
+
+        // Copiar al portapapeles
+        document.getElementById('copyToClipboard').addEventListener('click', () => {
+            const output = document.getElementById('asciiOutput');
+            output.select();
+            document.execCommand('copy'); // Fallback for navigator.clipboard.writeText
+            showMessage("¡Contenido copiado al portapapeles!");
+        });
+
+        // Descargar archivo
+        document.getElementById('downloadAscii').addEventListener('click', () => {
+            const output = document.getElementById('asciiOutput').value;
+            if (!output) {
+                showMessage("Primero genera el contenido ASCII.");
+                return;
+            }
+            const filenameSuffix = currentOperationType === 'alta' ? 'alta' : 'modificacion';
+            const blob = new Blob([output], { type: 'text/plain;charset=ascii' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `deudores_${filenameSuffix}_${new Date().toISOString().slice(0,10).replace(/-/g,"")}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showMessage("¡Archivo descargado!");
+        });
+    </script>
+</body>
+</html>
